@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualización de Ocupación de Oficinas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 50%;
+            margin: 50px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .occupied {
+            color: red;
+        }
+        .available {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Disponibilidad de Escritorios</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID de Escritorio</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody id="occupancyTable">
+            {% for desk in occupancy %}
+                <tr id="desk-{{ desk.id }}">
+                    <td>{{ desk.id }}</td>
+                    <td class="{{ 'occupied' if desk.status == 'Occupied' else 'available' }}">{{ desk.status }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        // Función para actualizar la tabla con los datos más recientes de ocupación
+        function fetchOccupancyData() {
+            fetch('/occupancy')
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Received occupancy data:", data); // Agregar log
+                    const tableBody = document.getElementById('occupancyTable');
+                    
+                    // Actualiza la tabla con los datos
+                    data.forEach(desk => {
+                        const row = tableBody.querySelector(`#desk-${desk.id}`);
+                        if (row) {
+                            const statusCell = row.querySelector('td:last-child');
+                            if (statusCell.textContent !== desk.status) {
+                                console.log(`Updating desk ${desk.id}: ${statusCell.textContent} -> ${desk.status}`); // Agregar log
+                                statusCell.textContent = desk.status;
+                                statusCell.className = desk.status === 'Occupied' ? 'occupied' : 'available';
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error("Error fetching occupancy data:", error));
+        }
+
+        // Cargar los datos de ocupación y actualizar la tabla cada 3 segundos
+        setInterval(fetchOccupancyData, 3000);
+        fetchOccupancyData();  // Cargar los datos de inicio
+    </script>
+</body>
+</html>
+
+
+
+
+
